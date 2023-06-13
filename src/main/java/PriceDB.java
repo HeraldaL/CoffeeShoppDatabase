@@ -1,26 +1,46 @@
+import java.sql.*;
 import java.util.ArrayList;
 
 public class PriceDB {
 
-    private final ArrayList<Beverage> beverageList = new ArrayList<>();
+    private final Connection connection;
 
+    public PriceDB() {
+
+        String driverClassname = "com.mysql.cj.jdbc.Driver";
+        String url = "jdbc:mysql://localhost:3306/Coffee_Shop";
+       // String username = "root";
+       // String password = "YU123.";
+
+        try {
+            connection = DriverManager.getConnection(url, "root", "YU123.");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public double findPrice(SizeType size, DrinkType type) {
         double value = 0.0;
-        for (Beverage b : beverageList) {
-            if (b.getSize() == size && b.getType() == type) value = b.getPrice();
+        try {
+
+            String query = "SELECT price FROM Coffee_shop WHERE size = ? AND drink_type = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, size.toString());
+            statement.setString(2, type.toString());
+            ResultSet resultSet = statement.executeQuery();
+
+
+            if (resultSet.next()) {
+                value = resultSet.getDouble("price");
+            }
+
+
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
+
         return value;
     }
-
-
-    public PriceDB() {
-        this.beverageList.add( new Beverage(SizeType.SMALL, 8.00, DrinkType.COFFEE));
-        this.beverageList.add( new Beverage(SizeType.MEDIUM, 4.98, DrinkType.COFFEE));
-        this.beverageList.add( new Beverage(SizeType.LARGE, 6.00, DrinkType.COFFEE));
-        this.beverageList.add( new Beverage(SizeType.SMALL, 180.00, DrinkType.TEA));
-        this.beverageList.add( new Beverage(SizeType.MEDIUM, 3.00, DrinkType.TEA));
-        this.beverageList.add( new Beverage(SizeType.LARGE, 6.00, DrinkType.TEA));
-    }
-
 }
